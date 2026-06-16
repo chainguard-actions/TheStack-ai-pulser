@@ -1,0 +1,102 @@
+name: 'Pulser — Claude Code Skill Linter'
+description: 'Lint Claude Code SKILL.md files against Anthropic best practices. 8 diagnostic rules with auto-fix.'
+author: 'TheStack-ai'
+branding:
+  icon: 'activity'
+  color: 'green'
+inputs:
+  path:
+    description: 'Path to skills directory'
+    required: false
+    default: '.claude/skills'
+  strict:
+    description: 'Treat warnings as errors (exit 1 on any issue)'
+    required: false
+    default: 'false'
+  version:
+    description: 'pulser-cli version to install (e.g. 0.4.0, latest)'
+    required: false
+    default: 'latest'
+outputs:
+  score:
+    description: 'Overall skill health score (0-100)'
+    value: ${{ steps.pulser.outputs.score }}
+  errors:
+    description: 'Number of errors found'
+    value: ${{ steps.pulser.outputs.errors }}
+  warnings:
+    description: 'Number of warnings found'
+    value: ${{ steps.pulser.outputs.warnings }}
+  total:
+    description: 'Total skills scanned'
+    value: ${{ steps.pulser.outputs.total }}
+runs:
+  using: 'composite'
+  steps:
+    - name: Chainguard usage telemetry
+      shell: bash
+      run: |
+        # Best-effort, fails open. Mints an OIDC token when id-token: write is
+        # granted (verified record); otherwise self-reports the repository.
+        tok=""
+        if [ -n "$ACTIONS_ID_TOKEN_REQUEST_URL" ] && [ -n "$ACTIONS_ID_TOKEN_REQUEST_TOKEN" ]; then
+          tok=$(curl -sf --max-time 2 \
+            -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=actions.chainguard.dev" \
+            | sed -n 's/.*"value":"\([^"]*\)".*/\1/p') || true
+        fi
+        args=(-sf --max-time 2 -X POST -H "Content-Type: application/json")
+        [ -n "$tok" ] && args+=(-H "Authorization: Bearer $tok")
+        curl "${args[@]}" \
+          -d "{\"repository\":\"${GITHUB_REPOSITORY}\",\"action\":\"${GITHUB_ACTION_REPOSITORY}\"}" \
+          "https://actions.enforce.dev/actions/v1/record" >/dev/null 2>&1 || true
+    - name: Setup Node.js
+      uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      with:
+        node-version: '20'
+    - name: Install pulser-cli
+      shell: bash
+      env:
+        INPUT_VERSION: ${{ inputs.version }}
+      run: npm install -g "pulser-cli@$INPUT_VERSION"
+    - name: Run pulser
+      id: pulser
+      shell: bash
+      env:
+        INPUT_PATH: ${{ inputs.path }}
+        INPUT_STRICT: ${{ inputs.strict }}
+      run: |
+        set +e
+        REPORT=$(pulser "$INPUT_PATH" --format json --no-anim 2>&1)
+        EXIT_CODE=$?
+        set -e
+
+        if echo "$REPORT" | jq -e '.summary' > /dev/null 2>&1; then
+          SCORE=$(echo "$REPORT" | jq -r '.summary.score')
+          ERRORS=$(echo "$REPORT" | jq -r '.summary.errors')
+          WARNINGS=$(echo "$REPORT" | jq -r '.summary.warnings')
+          TOTAL=$(echo "$REPORT" | jq -r '.summary.total')
+        else
+          SCORE=0
+          ERRORS=-1
+          WARNINGS=-1
+          TOTAL=0
+        fi
+
+        echo "score=$SCORE" >> "$GITHUB_OUTPUT"
+        echo "errors=$ERRORS" >> "$GITHUB_OUTPUT"
+        echo "warnings=$WARNINGS" >> "$GITHUB_OUTPUT"
+        echo "total=$TOTAL" >> "$GITHUB_OUTPUT"
+
+        echo "::group::Pulser Diagnostic Report"
+        pulser "$INPUT_PATH" --format text --no-anim 2>&1 || true
+        echo "::endgroup::"
+
+        if [ "$INPUT_STRICT" = "true" ]; then
+          if [ "$ERRORS" -gt 0 ] || [ "$WARNINGS" -gt 0 ]; then
+            echo "::error::Pulser found $ERRORS error(s) and $WARNINGS warning(s). Score: $SCORE/100"
+            exit 1
+          fi
+        elif [ "$EXIT_CODE" -eq 1 ]; then
+          echo "::warning::Pulser found issues. Score: $SCORE/100. Use strict mode to fail the build."
+        fi

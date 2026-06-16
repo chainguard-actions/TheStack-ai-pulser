@@ -1,0 +1,48 @@
+name: Test missing skills directory (graceful fallback)
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - id: action
+        uses: .
+        with:
+          path: "${{ github.workspace }}/nonexistent-skills-dir"
+          strict: 'false'
+          version: 'latest'
+
+      - name: Assert score output is set (fallback to 0)
+        env:
+          SCORE: ${{ steps.action.outputs.score }}
+        run: |
+          echo "score: $SCORE"
+          if [ -z "$SCORE" ]; then
+            echo "FAIL: score output is empty"
+            exit 1
+          fi
+          echo "PASS: score=$SCORE"
+
+      - name: Assert errors output is set (fallback to -1)
+        env:
+          ERRORS: ${{ steps.action.outputs.errors }}
+        run: |
+          echo "errors: $ERRORS"
+          if [ -z "$ERRORS" ]; then
+            echo "FAIL: errors output is empty"
+            exit 1
+          fi
+          echo "PASS: errors=$ERRORS"
+
+      - name: Assert total output is set (fallback to 0)
+        env:
+          TOTAL: ${{ steps.action.outputs.total }}
+        run: |
+          echo "total: $TOTAL"
+          if [ -z "$TOTAL" ]; then
+            echo "FAIL: total output is empty"
+            exit 1
+          fi
+          echo "PASS: total=$TOTAL"

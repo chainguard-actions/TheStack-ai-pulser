@@ -1,0 +1,61 @@
+name: Test pinned pulser-cli version
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create skills directory with a sample SKILL.md
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/test-skills-versioned"
+          cat > "$GITHUB_WORKSPACE/test-skills-versioned/SKILL.md" << 'EOF'
+          # Versioned Skill Test
+
+          ## Description
+          This skill is used to test a pinned version of pulser-cli.
+
+          ## Usage
+          Use this skill to verify version pinning works correctly.
+
+          ## Examples
+          - Example 1: Check version
+          EOF
+
+      - id: action
+        uses: .
+        with:
+          path: "${{ github.workspace }}/test-skills-versioned"
+          strict: 'false'
+          version: '0.4.0'
+
+      - name: Assert score output is a non-negative integer
+        env:
+          SCORE: ${{ steps.action.outputs.score }}
+        run: |
+          echo "score: $SCORE"
+          if [ -z "$SCORE" ]; then
+            echo "FAIL: score output is empty"
+            exit 1
+          fi
+          if ! echo "$SCORE" | grep -qE '^[0-9]+$'; then
+            echo "FAIL: score '$SCORE' is not a non-negative integer"
+            exit 1
+          fi
+          echo "PASS: score=$SCORE"
+
+      - name: Assert total output is a non-negative integer
+        env:
+          TOTAL: ${{ steps.action.outputs.total }}
+        run: |
+          echo "total: $TOTAL"
+          if [ -z "$TOTAL" ]; then
+            echo "FAIL: total output is empty"
+            exit 1
+          fi
+          if ! echo "$TOTAL" | grep -qE '^[0-9]+$'; then
+            echo "FAIL: total '$TOTAL' is not a non-negative integer"
+            exit 1
+          fi
+          echo "PASS: total=$TOTAL"

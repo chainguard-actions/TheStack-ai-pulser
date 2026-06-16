@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>pulser — Diagnose. Test. Fix.</title>
+  <meta name="description" content="'스킬 점검해줘' 한 마디. Claude Code 대화 안에서 진단, 테스트, 처방, 수정까지 끝납니다.">
+  <meta property="og:title" content="pulser — Diagnose. Test. Fix.">
+  <meta property="og:description" content="Check my skills. Diagnose, test, and fix Claude Code skills — without leaving the conversation.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://whynowlab.github.io/pulser/">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="pulser — Diagnose. Test. Fix.">
+  <meta name="twitter:description" content="Check my skills. Diagnose, classify, prescribe, and fix — without leaving the conversation.">
+  <link rel="canonical" href="https://whynowlab.github.io/pulser/">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "pulser",
+    "description": "Diagnose, test, and fix Claude Code skills — without leaving the conversation.",
+    "url": "https://github.com/whynowlab/pulser",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Windows, macOS, Linux",
+    "license": "https://opensource.org/licenses/MIT",
+    "author": { "@type": "Organization", "name": "whynowlab" }
+  }
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'system-ui', 'sans-serif'],
+          mono: ['"JetBrains Mono"', 'Fira Code', 'ui-monospace', 'monospace'],
+        }
+      }
+    }
+  }
+  </script>
+  <style>
+    html { scroll-behavior: smooth }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto } }
+  </style>
+</head>
+<body class="min-h-screen bg-black text-slate-50 font-sans antialiased selection:bg-cyan-500/30 selection:text-cyan-100">
+
+  <!-- Skip Link -->
+  <a href="#main" class="absolute left-4 top-4 -translate-y-20 focus:translate-y-0 z-50 bg-cyan-500 text-black px-4 py-2 font-mono text-sm rounded-sm transition-transform focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 focus:ring-offset-black">
+    본문으로 건너뛰기
+  </a>
+
+  <!-- Sticky Nav -->
+  <nav aria-label="주요" class="sticky top-0 z-40 bg-black/90 backdrop-blur-sm border-b border-slate-800">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
+      <a href="#" class="font-mono font-bold text-slate-50 hover:text-cyan-500 transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 focus:ring-offset-black">pulser</a>
+      <div class="flex items-center gap-5 sm:gap-6 text-sm">
+        <a href="#demo" class="text-slate-300 hover:text-cyan-500 transition-colors hidden sm:inline focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 focus:ring-offset-black">Demo</a>
+        <a href="#features" class="text-slate-300 hover:text-cyan-500 transition-colors hidden sm:inline focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 focus:ring-offset-black">Features</a>
+        <a href="#usage" class="text-slate-300 hover:text-cyan-500 transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 focus:ring-offset-black">Usage</a>
+        <a href="https://github.com/whynowlab/pulser" rel="noopener noreferrer" target="_blank" class="text-slate-50 hover:text-cyan-500 transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 focus:ring-offset-black">GitHub</a>
+      </div>
+    </div>
+  </nav>
+
+  <main id="main">
+
+    <!-- ========== Hero ========== -->
+    <section class="relative overflow-hidden py-20 sm:py-24 md:py-32">
+      <!-- Waveform Background -->
+      <div class="absolute inset-0 pointer-events-none" aria-hidden="true">
+        <canvas id="wave-canvas" style="position:absolute;top:0;left:0;width:100%;height:100%"></canvas>
+      </div>
+
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+        <div class="max-w-4xl text-center md:text-left">
+          <p class="font-mono text-cyan-500 text-sm sm:text-base mb-4 tracking-wider">Diagnose. Test. Fix.</p>
+          <h1 class="text-4xl sm:text-5xl md:text-6xl font-bold leading-tight tracking-tight mb-6 text-slate-50">
+            '스킬 점검해줘'<br class="sm:hidden"> 한 마디.
+          </h1>
+          <p class="text-lg sm:text-xl md:text-2xl text-slate-300 leading-relaxed mb-3">
+            Claude Code 대화 안에서 진단, 테스트, 처방, 수정까지 끝납니다.
+          </p>
+          <p class="text-base sm:text-lg md:text-xl text-slate-400 leading-relaxed mb-10">
+            "Check my skills." Diagnose, test, and fix — without leaving the conversation.
+          </p>
+
+          <!-- Install CTA -->
+          <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 max-w-xl md:mx-0 mx-auto">
+            <div class="bg-[#0a0a0a] border border-slate-800 rounded-sm px-4 py-3 font-mono text-sm sm:text-base text-cyan-500 flex-1 overflow-x-auto whitespace-nowrap">
+              <span class="text-slate-500 select-none">$ </span>npm install -g pulser-cli
+            </div>
+            <button onclick="copyCmd(this)" aria-label="설치 명령 복사" class="copy-btn inline-flex items-center justify-center min-h-[48px] px-5 border-2 border-cyan-500 text-cyan-500 font-mono font-bold rounded-sm hover:bg-cyan-500 hover:text-black active:bg-cyan-600 active:border-cyan-600 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 focus:ring-offset-black transition-colors cursor-pointer">
+              Copy
+            </button>
+          </div>
+          <div aria-live="polite" class="copy-feedback mt-2 font-mono text-sm h-5"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== Terminal Demo ========== -->
+    <section id="demo" class="py-16 md:py-24 border-t border-slate-800">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-12 items-start">
+          <!-- Left: Copy -->
+          <div>
+            <p class="font-mono text-cyan-500 text-sm mb-2">Demo</p>
+            <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold leading-tight mb-6">실제 출력, 그대로</h2>
+            <p class="text-slate-300 text-base leading-relaxed mb-4">
+              다른 도구는 pass/fail만 출력합니다.
+            </p>
+            <p class="text-slate-300 text-base leading-relaxed mb-6">
+              pulser는 <strong class="text-slate-50">왜 문제인지</strong> 설명하고,
+              <strong class="text-slate-50">바로 쓸 템플릿</strong>을 제시하고,
+              <strong class="text-slate-50">자동 수정</strong>하고,
+              <strong class="text-slate-50">롤백</strong>까지 제공합니다.
+            </p>
+            <p class="text-slate-500 text-sm leading-relaxed">
+              Others stop at pass/fail. pulser explains why, provides templates, auto-fixes, and lets you undo.
+            </p>
+          </div>
+
+          <!-- Right: Terminal -->
+          <div class="bg-[#0a0a0a] border border-slate-800 rounded-sm overflow-hidden">
+            <div class="flex items-center gap-2 px-4 py-3 border-b border-slate-800">
+              <div class="w-2.5 h-2.5 rounded-full bg-red-500"></div>
+              <div class="w-2.5 h-2.5 rounded-full bg-yellow-500"></div>
+              <div class="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
+            </div>
+            <pre class="p-4 sm:p-6 font-mono text-sm leading-6 text-slate-300 overflow-x-auto" aria-label="pulser 터미널 데모 출력"><code><span class="text-slate-500">$</span> pulser
+
+<span class="text-slate-500">pulser v0.4.0</span>
+
+<span class="text-emerald-500">54</span> skills scanned · Score: <span class="text-emerald-500">89</span>/100
+<span class="text-emerald-500">✓ 48 healthy</span>  <span class="text-yellow-500">⚠ 4 warnings</span>  <span class="text-red-500">✗ 2 errors</span>
+
+<span class="text-slate-500">Top issues:</span>
+  cardnews    <span class="text-slate-500">—</span> <span class="text-yellow-500">No Gotchas, no allowed-tools</span>
+  geo-audit   <span class="text-slate-500">—</span> <span class="text-yellow-500">338 lines, single file</span>
+
+<span class="text-cyan-500">💊 Rx #1 — cardnews</span>
+  <span class="text-slate-500">[GOTCHAS]</span> Add Gotchas section
+  <span class="text-slate-500">Why:</span> Anthropic's highest-ROI improvement
+  <span class="text-slate-500">Template:</span>
+<span class="text-cyan-500">    ## Gotchas
+    1. Validate output against conventions
+    2. Check scope — don't over-generate</span>
+
+  <span class="text-slate-500">Fix:</span> <span class="text-emerald-500">AUTO</span> <span class="text-slate-500">·</span> <span class="text-slate-50">pulser --fix</span> <span class="text-slate-500">to apply ·</span> <span class="text-slate-50">pulser undo</span> <span class="text-slate-500">to rollback</span></code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== Core Pipeline ========== -->
+    <section id="features" class="py-16 md:py-24 border-t border-slate-800">
+      <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <p class="font-mono text-cyan-500 text-sm mb-2">Core Pipeline</p>
+        <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold leading-tight mb-12">진단에서 롤백까지, 한 흐름으로</h2>
+
+        <ol class="flex flex-col md:grid md:grid-cols-4 gap-8 md:gap-6">
+          <!-- Diagnose -->
+          <li class="relative pl-6 md:pl-0 md:pt-6 border-l-2 md:border-l-0 md:border-t-2 border-red-500">
+            <div class="absolute left-[-5px] top-1 md:top-[-5px] md:left-4 w-2.5 h-2.5 bg-black border-2 border-red-500 rounded-full"></div>
+            <h3 class="text-red-500 font-bold text-lg mb-2">Diagnose</h3>
+            <p class="text-slate-300 text-sm leading-relaxed">8가지 규칙으로 증상을 찾고 문제를 분류합니다.</p>
+            <p class="text-slate-500 text-xs mt-2">Scan and classify issues across 8 rules.</p>
+          </li>
+          <!-- Prescribe -->
+          <li class="relative pl-6 md:pl-0 md:pt-6 border-l-2 md:border-l-0 md:border-t-2 border-cyan-500">
+            <div class="absolute left-[-5px] top-1 md:top-[-5px] md:left-4 w-2.5 h-2.5 bg-black border-2 border-cyan-500 rounded-full"></div>
+            <h3 class="text-cyan-500 font-bold text-lg mb-2">Prescribe</h3>
+            <p class="text-slate-300 text-sm leading-relaxed">왜 문제인지 설명하고, 바로 쓸 수 있는 템플릿을 제시합니다.</p>
+            <p class="text-slate-500 text-xs mt-2">Explain why and provide ready-to-use templates.</p>
+          </li>
+          <!-- Fix -->
+          <li class="relative pl-6 md:pl-0 md:pt-6 border-l-2 md:border-l-0 md:border-t-2 border-emerald-500">
+            <div class="absolute left-[-5px] top-1 md:top-[-5px] md:left-4 w-2.5 h-2.5 bg-black border-2 border-emerald-500 rounded-full"></div>
+            <h3 class="text-emerald-500 font-bold text-lg mb-2">Fix</h3>
+            <p class="text-slate-300 text-sm leading-relaxed">안전한 구조 수정을 자동으로 적용합니다.</p>
+            <p class="text-slate-500 text-xs mt-2">Auto-apply safe structural fixes with backup.</p>
+          </li>
+          <!-- Rollback -->
+          <li class="relative pl-6 md:pl-0 md:pt-6 border-l-2 md:border-l-0 md:border-t-2 border-yellow-500">
+            <div class="absolute left-[-5px] top-1 md:top-[-5px] md:left-4 w-2.5 h-2.5 bg-black border-2 border-yellow-500 rounded-full"></div>
+            <h3 class="text-yellow-500 font-bold text-lg mb-2">Rollback</h3>
+            <p class="text-slate-300 text-sm leading-relaxed">언제든 이전 상태로 되돌릴 수 있는 안전망.</p>
+            <p class="text-slate-500 text-xs mt-2">Instant undo — your safety net.</p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ========== Eval ========== -->
+    <section class="py-16 md:py-24 border-t border-slate-800">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-12 items-start">
+          <!-- Left: Copy -->
+          <div>
+            <p class="font-mono text-cyan-500 text-sm mb-2">Eval — New in v0.4</p>
+            <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold leading-tight mb-6">스킬을 실제로 테스트</h2>
+            <p class="text-slate-300 text-base leading-relaxed mb-4">
+              서류 검사를 넘어, <strong class="text-slate-50">모의고사</strong>를 봅니다.
+            </p>
+            <p class="text-slate-300 text-base leading-relaxed mb-6">
+              <code class="text-cyan-500 text-sm">eval.yaml</code>에 테스트를 작성하면
+              pulser가 스킬을 실행하고, 출력을 검증하고,
+              <strong class="text-slate-50">회귀를 자동 추적</strong>합니다.
+            </p>
+            <p class="text-slate-500 text-sm leading-relaxed">
+              Beyond static analysis — run your skills against real inputs, check assertions, and catch regressions automatically.
+            </p>
+          </div>
+
+          <!-- Right: Terminal -->
+          <div class="bg-[#0a0a0a] border border-slate-800 rounded-sm overflow-hidden">
+            <div class="flex items-center gap-2 px-4 py-3 border-b border-slate-800">
+              <div class="w-2.5 h-2.5 rounded-full bg-red-500"></div>
+              <div class="w-2.5 h-2.5 rounded-full bg-yellow-500"></div>
+              <div class="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
+            </div>
+            <pre class="p-4 sm:p-6 font-mono text-sm leading-6 text-slate-300 overflow-x-auto" aria-label="pulser eval 터미널 데모 출력"><code><span class="text-slate-500">$</span> pulser eval
+
+  <span class="text-slate-50">reviewer</span> <span class="text-slate-500">(2 tests)</span>
+    <span class="text-emerald-500">✓</span> catches bugs         <span class="text-slate-500">320ms</span>
+    <span class="text-emerald-500">✓</span> passes clean code    <span class="text-slate-500">280ms</span>
+
+  <span class="text-slate-50">geo-audit</span> <span class="text-slate-500">(3 tests)</span>
+    <span class="text-emerald-500">✓</span> URL analysis         <span class="text-slate-500">450ms</span>
+    <span class="text-emerald-500">✓</span> schema detection     <span class="text-slate-500">380ms</span>
+    <span class="text-emerald-500">✓</span> report generation    <span class="text-slate-500">520ms</span>
+
+  <span class="text-emerald-500">5 passed</span> · <span class="text-slate-500">0 failed</span> · <span class="text-slate-500">1.95s</span></code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== 3 Usage Methods ========== -->
+    <section id="usage" class="py-16 md:py-24 border-t border-slate-800">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <p class="font-mono text-cyan-500 text-sm mb-2">Usage</p>
+        <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold leading-tight mb-12">어디서든, 같은 진단</h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-slate-800">
+          <article class="py-6 md:py-0 md:pr-6">
+            <p class="text-cyan-500 font-mono text-sm mb-2">Claude Code</p>
+            <h3 class="text-xl font-bold mb-3">대화 안에서</h3>
+            <div class="font-mono text-sm text-slate-50 bg-[#0a0a0a] border border-slate-800 rounded-sm px-3 py-2 inline-block mb-3">스킬 점검해줘</div>
+            <p class="text-slate-300 text-sm leading-relaxed">
+              Claude Code 대화에서 바로 진단하고 수정까지. <span class="font-mono text-cyan-500">/pulser</span>도 됩니다.
+            </p>
+          </article>
+          <article class="py-6 md:py-0 md:px-6">
+            <p class="text-cyan-500 font-mono text-sm mb-2">Codex</p>
+            <h3 class="text-xl font-bold mb-3">프롬프트로</h3>
+            <div class="font-mono text-sm text-slate-50 bg-[#0a0a0a] border border-slate-800 rounded-sm px-3 py-2 inline-block mb-3">pulser 실행해</div>
+            <p class="text-slate-300 text-sm leading-relaxed">
+              OpenAI Codex 환경에서도 동일한 진단 파이프라인을 실행합니다.
+            </p>
+          </article>
+          <article class="py-6 md:py-0 md:pl-6">
+            <p class="text-cyan-500 font-mono text-sm mb-2">Terminal</p>
+            <h3 class="text-xl font-bold mb-3">직접 실행</h3>
+            <div class="font-mono text-sm text-slate-50 bg-[#0a0a0a] border border-slate-800 rounded-sm px-3 py-2 inline-block mb-3">pulser --fix</div>
+            <p class="text-slate-300 text-sm leading-relaxed">
+              CI/CD, Git hooks, 또는 터미널에서 직접. JSON 출력도 지원합니다.
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== Bottom CTA ========== -->
+    <section class="py-16 md:py-24 border-t border-slate-800">
+      <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <p class="font-mono text-cyan-500 text-sm sm:text-base mb-4 tracking-wider">Diagnose. Test. Fix.</p>
+        <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold leading-tight mb-4">한 마디면 끝납니다</h2>
+        <p class="text-slate-300 text-base leading-relaxed mb-8">Free · Open Source · MIT</p>
+
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 max-w-lg mx-auto">
+          <div class="bg-[#0a0a0a] border border-slate-800 rounded-sm px-4 py-3 font-mono text-sm sm:text-base text-cyan-500 flex-1 overflow-x-auto whitespace-nowrap text-left">
+            <span class="text-slate-500 select-none">$ </span>npm install -g pulser-cli
+          </div>
+          <button onclick="copyCmd(this)" aria-label="설치 명령 복사" class="copy-btn inline-flex items-center justify-center min-h-[48px] px-5 border-2 border-cyan-500 text-cyan-500 font-mono font-bold rounded-sm hover:bg-cyan-500 hover:text-black active:bg-cyan-600 active:border-cyan-600 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 focus:ring-offset-black transition-colors cursor-pointer">
+            Copy
+          </button>
+        </div>
+        <div aria-live="polite" class="copy-feedback mt-2 font-mono text-sm h-5"></div>
+
+        <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-8 justify-center">
+          <a href="https://github.com/whynowlab/pulser" rel="noopener noreferrer" target="_blank" class="inline-flex items-center justify-center min-h-[48px] px-5 border border-slate-800 text-slate-50 rounded-sm hover:border-cyan-500 hover:text-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 focus:ring-offset-black transition-colors">
+            GitHub
+          </a>
+          <a href="https://www.npmjs.com/package/pulser-cli" rel="noopener noreferrer" target="_blank" class="inline-flex items-center justify-center min-h-[48px] px-5 border border-slate-800 text-slate-50 rounded-sm hover:border-cyan-500 hover:text-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 focus:ring-offset-black transition-colors">
+            npm
+          </a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-800 py-8">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+      <p class="text-slate-500 text-sm font-mono">pulser — Diagnose. Test. Fix.</p>
+      <div class="flex gap-4 text-sm">
+        <a href="https://github.com/whynowlab/pulser" rel="noopener noreferrer" target="_blank" class="text-slate-500 hover:text-cyan-500 transition-colors">GitHub</a>
+        <a href="https://www.npmjs.com/package/pulser-cli" rel="noopener noreferrer" target="_blank" class="text-slate-500 hover:text-cyan-500 transition-colors">npm</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+  // --- Waveform animation (Canvas + Retina) ---
+  (function() {
+    var canvas = document.getElementById('wave-canvas');
+    if (!canvas) return;
+    var ctx = canvas.getContext('2d');
+    var dpr = window.devicePixelRatio || 1;
+    var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var ecgOff = 0, capOff = 0;
+    var W = 0, H = 0;
+
+    function resize() {
+      var s = canvas.closest('section');
+      W = s.offsetWidth; H = s.offsetHeight;
+      canvas.width = W * dpr; canvas.height = H * dpr;
+      canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    // ECG: realistic PQRST morphology
+    function ecgY(t) {
+      // P wave (small atrial depolarization bump)
+      if (t > 52 && t < 68) return -9 * Math.sin((t - 52) / 16 * Math.PI);
+      // Q dip
+      if (t >= 72 && t < 75) return 4 * ((t - 72) / 3);
+      // R spike (sharp ventricular depolarization)
+      if (t >= 75 && t < 78) return 4 - 62 * Math.sin((t - 75) / 3 * Math.PI / 2);
+      // S dip
+      if (t >= 78 && t < 82) return -58 + 78 * ((t - 78) / 4);
+      // S recovery
+      if (t >= 82 && t < 86) return 20 * (1 - (t - 82) / 4);
+      // T wave (ventricular repolarization)
+      if (t >= 100 && t < 120) return -16 * Math.sin((t - 100) / 20 * Math.PI);
+      return 0;
+    }
+
+    // EtCO2: capnography with characteristic plateau
+    function capY(t) {
+      if (t >= 25 && t < 33) return -48 * ((t - 25) / 8);                        // expiration rise
+      if (t >= 33 && t < 70) return -48 - 6 * Math.sin((t - 33) / 37 * Math.PI); // alveolar plateau (slight curve)
+      if (t >= 70 && t < 77) return -54 * (1 - Math.pow((t - 70) / 7, 0.6));     // inspiration drop (slightly rounded)
+      return 0;
+    }
+
+    function drawWave(yBase, off, period, color, fn, glow) {
+      ctx.save();
+      // Glow layer
+      if (glow) {
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 8;
+      }
+      ctx.beginPath();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1.8;
+      ctx.lineJoin = 'round';
+      ctx.lineCap = 'round';
+      for (var x = 0; x <= W; x += 0.5) {
+        var t = (((x + off) % period) + period) % period;
+        var y = yBase + fn(t);
+        x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function render() {
+      ctx.clearRect(0, 0, W, H);
+      ctx.globalAlpha = 0.25;
+      // ECG — green, upper area
+      drawWave(H * 0.35, ecgOff, 150, '#10b981', ecgY, true);
+      // EtCO2 — cyan, lower area
+      drawWave(H * 0.72, capOff, 150, '#06b6d4', capY, true);
+      ctx.globalAlpha = 1;
+    }
+
+    function tick() {
+      ecgOff += 1.6;
+      capOff += 0.85;
+      render();
+      requestAnimationFrame(tick);
+    }
+
+    // Reduced motion: draw static, don't animate
+    if (reduceMotion) { render(); }
+    else { requestAnimationFrame(tick); }
+  })();
+
+  // --- Copy button ---
+  function copyCmd(btn) {
+    navigator.clipboard.writeText('npm install -g pulser-cli').then(function() {
+      var orig = btn.textContent;
+      btn.textContent = 'Copied!';
+      btn.classList.remove('border-cyan-500','text-cyan-500','hover:bg-cyan-500');
+      btn.classList.add('border-emerald-500','text-emerald-500','hover:bg-emerald-500');
+      var fb = btn.closest('section') ? btn.closest('section').querySelector('.copy-feedback') : null;
+      if (fb) fb.textContent = 'Copied to clipboard';
+      setTimeout(function() {
+        btn.textContent = orig;
+        btn.classList.remove('border-emerald-500','text-emerald-500','hover:bg-emerald-500');
+        btn.classList.add('border-cyan-500','text-cyan-500','hover:bg-cyan-500');
+        if (fb) fb.textContent = '';
+      }, 2000);
+    });
+  }
+  </script>
+</body>
+</html>

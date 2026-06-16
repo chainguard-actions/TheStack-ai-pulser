@@ -1,0 +1,69 @@
+name: Test strict mode disabled (warnings do not fail build)
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create a minimal skill file that may have warnings
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/test-skills-strict"
+          cat > "$GITHUB_WORKSPACE/test-skills-strict/SKILL.md" << 'EOF'
+          # Minimal Skill
+          A very short skill file.
+          EOF
+
+      - id: action
+        uses: .
+        with:
+          path: "${{ github.workspace }}/test-skills-strict"
+          strict: 'false'
+          version: 'latest'
+
+      - name: Assert action completed and score is numeric
+        env:
+          SCORE: ${{ steps.action.outputs.score }}
+        run: |
+          echo "score: $SCORE"
+          if [ -z "$SCORE" ]; then
+            echo "FAIL: score output is empty"
+            exit 1
+          fi
+          # Score should be a number (0-100) or 0 on fallback
+          if ! echo "$SCORE" | grep -qE '^[0-9]+$'; then
+            echo "FAIL: score '$SCORE' is not a non-negative integer"
+            exit 1
+          fi
+          echo "PASS: score=$SCORE is numeric"
+
+      - name: Assert errors output is numeric or -1 (fallback)
+        env:
+          ERRORS: ${{ steps.action.outputs.errors }}
+        run: |
+          echo "errors: $ERRORS"
+          if [ -z "$ERRORS" ]; then
+            echo "FAIL: errors output is empty"
+            exit 1
+          fi
+          if ! echo "$ERRORS" | grep -qE '^-?[0-9]+$'; then
+            echo "FAIL: errors '$ERRORS' is not an integer"
+            exit 1
+          fi
+          echo "PASS: errors=$ERRORS is an integer"
+
+      - name: Assert warnings output is numeric or -1 (fallback)
+        env:
+          WARNINGS: ${{ steps.action.outputs.warnings }}
+        run: |
+          echo "warnings: $WARNINGS"
+          if [ -z "$WARNINGS" ]; then
+            echo "FAIL: warnings output is empty"
+            exit 1
+          fi
+          if ! echo "$WARNINGS" | grep -qE '^-?[0-9]+$'; then
+            echo "FAIL: warnings '$WARNINGS' is not an integer"
+            exit 1
+          fi
+          echo "PASS: warnings=$WARNINGS is an integer"
