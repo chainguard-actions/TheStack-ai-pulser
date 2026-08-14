@@ -1,0 +1,68 @@
+name: Test strict mode disabled - action succeeds even with issues
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create skills directory with a minimal SKILL.md that may have issues
+        run: |
+          # The scanner looks for SKILL.md files inside subdirectories of the skills path
+          mkdir -p .claude/skills/my-skill
+          cat > .claude/skills/my-skill/SKILL.md << 'EOF'
+          # Skill
+          Do stuff.
+          EOF
+
+      - id: action
+        uses: .
+        with:
+          path: '.claude/skills'
+          strict: 'false'
+
+      - name: Assert action succeeded and outputs are present
+        env:
+          SCORE: ${{ steps.action.outputs.score }}
+          ERRORS: ${{ steps.action.outputs.errors }}
+          WARNINGS: ${{ steps.action.outputs.warnings }}
+          TOTAL: ${{ steps.action.outputs.total }}
+        run: |
+          echo "score: $SCORE"
+          echo "errors: $ERRORS"
+          echo "warnings: $WARNINGS"
+          echo "total: $TOTAL"
+
+          # With strict=false, the action should always succeed (exit 0)
+          # and all outputs should be populated
+          if [ -z "$SCORE" ]; then
+            echo "FAIL: score output is empty"
+            exit 1
+          fi
+          echo "PASS: score output is set"
+
+          if [ -z "$ERRORS" ]; then
+            echo "FAIL: errors output is empty"
+            exit 1
+          fi
+          echo "PASS: errors output is set"
+
+          if [ -z "$WARNINGS" ]; then
+            echo "FAIL: warnings output is empty"
+            exit 1
+          fi
+          echo "PASS: warnings output is set"
+
+          if [ -z "$TOTAL" ]; then
+            echo "FAIL: total output is empty"
+            exit 1
+          fi
+          echo "PASS: total output is set"
+
+          # Score should be numeric (0-100 range or 0 for parse failure)
+          if ! echo "$SCORE" | grep -qE '^-?[0-9]+(\.[0-9]+)?$'; then
+            echo "FAIL: score '$SCORE' is not a number"
+            exit 1
+          fi
+          echo "PASS: score is a valid number"

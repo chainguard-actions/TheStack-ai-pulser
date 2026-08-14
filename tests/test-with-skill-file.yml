@@ -1,0 +1,80 @@
+name: Test with SKILL.md file present
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create skills directory with a SKILL.md file in a subdirectory
+        run: |
+          # The scanner looks for SKILL.md files inside subdirectories of the skills path
+          # e.g. .claude/skills/my-skill/SKILL.md (NOT .claude/skills/SKILL.md)
+          mkdir -p .claude/skills/my-skill
+          cat > .claude/skills/my-skill/SKILL.md << 'EOF'
+          # My Skill
+
+          This is a basic skill file for testing purposes.
+
+          ## Usage
+
+          Use this skill to do things.
+          EOF
+
+      - id: action
+        uses: .
+        with:
+          path: '.claude/skills'
+          strict: 'false'
+
+      - name: Assert outputs are set and total is at least 1
+        env:
+          SCORE: ${{ steps.action.outputs.score }}
+          TOTAL: ${{ steps.action.outputs.total }}
+          ERRORS: ${{ steps.action.outputs.errors }}
+          WARNINGS: ${{ steps.action.outputs.warnings }}
+        run: |
+          echo "score: $SCORE"
+          echo "total: $TOTAL"
+          echo "errors: $ERRORS"
+          echo "warnings: $WARNINGS"
+
+          # All outputs should be set (non-empty)
+          if [ -z "$SCORE" ]; then
+            echo "FAIL: score output is empty"
+            exit 1
+          fi
+          echo "PASS: score is set"
+
+          if [ -z "$TOTAL" ]; then
+            echo "FAIL: total output is empty"
+            exit 1
+          fi
+          echo "PASS: total is set"
+
+          if [ -z "$ERRORS" ]; then
+            echo "FAIL: errors output is empty"
+            exit 1
+          fi
+          echo "PASS: errors is set"
+
+          if [ -z "$WARNINGS" ]; then
+            echo "FAIL: warnings output is empty"
+            exit 1
+          fi
+          echo "PASS: warnings is set"
+
+          # Score should be numeric
+          if ! echo "$SCORE" | grep -qE '^-?[0-9]+(\.[0-9]+)?$'; then
+            echo "FAIL: score '$SCORE' is not numeric"
+            exit 1
+          fi
+          echo "PASS: score is numeric"
+
+          # Total should be >= 1 since we have a SKILL.md in a subdirectory
+          if [ "$TOTAL" -lt 1 ]; then
+            echo "FAIL: expected total >= 1 but got '$TOTAL'"
+            exit 1
+          fi
+          echo "PASS: total >= 1 as expected"

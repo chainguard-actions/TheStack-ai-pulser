@@ -1,4 +1,4 @@
-name: Test basic usage with valid skill file
+name: Test basic usage - empty skills directory
 on:
   workflow_dispatch:
 jobs:
@@ -7,70 +7,51 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Create skills directory with a sample SKILL.md
-        run: |
-          mkdir -p "$GITHUB_WORKSPACE/test-skills"
-          cat > "$GITHUB_WORKSPACE/test-skills/SKILL.md" << 'EOF'
-          # My Skill
-
-          ## Description
-          This skill helps with coding tasks.
-
-          ## Usage
-          Use this skill when you need help with code.
-
-          ## Examples
-          - Example 1: Write a function
-          - Example 2: Debug an issue
-          EOF
+      - name: Create empty skills directory
+        run: mkdir -p .claude/skills
 
       - id: action
         uses: .
         with:
-          path: "${{ github.workspace }}/test-skills"
+          path: '.claude/skills'
           strict: 'false'
-          version: 'latest'
 
-      - name: Assert score output is set
+      - name: Assert score output is numeric
         env:
           SCORE: ${{ steps.action.outputs.score }}
-        run: |
-          echo "score: $SCORE"
-          if [ -z "$SCORE" ]; then
-            echo "FAIL: score output is empty"
-            exit 1
-          fi
-          echo "PASS: score=$SCORE"
-
-      - name: Assert total output is set
-        env:
           TOTAL: ${{ steps.action.outputs.total }}
-        run: |
-          echo "total: $TOTAL"
-          if [ -z "$TOTAL" ]; then
-            echo "FAIL: total output is empty"
-            exit 1
-          fi
-          echo "PASS: total=$TOTAL"
-
-      - name: Assert errors output is set
-        env:
           ERRORS: ${{ steps.action.outputs.errors }}
-        run: |
-          echo "errors: $ERRORS"
-          if [ -z "$ERRORS" ]; then
-            echo "FAIL: errors output is empty"
-            exit 1
-          fi
-          echo "PASS: errors=$ERRORS"
-
-      - name: Assert warnings output is set
-        env:
           WARNINGS: ${{ steps.action.outputs.warnings }}
         run: |
+          echo "score: $SCORE"
+          echo "total: $TOTAL"
+          echo "errors: $ERRORS"
           echo "warnings: $WARNINGS"
-          if [ -z "$WARNINGS" ]; then
-            echo "FAIL: warnings output is empty"
+
+          # Score should be a number (0-100 or 0 for empty)
+          if ! echo "$SCORE" | grep -qE '^-?[0-9]+(\.[0-9]+)?$'; then
+            echo "FAIL: score '$SCORE' is not numeric"
             exit 1
           fi
-          echo "PASS: warnings=$WARNINGS"
+          echo "PASS: score is numeric"
+
+          # Total should be a number
+          if ! echo "$TOTAL" | grep -qE '^-?[0-9]+$'; then
+            echo "FAIL: total '$TOTAL' is not numeric"
+            exit 1
+          fi
+          echo "PASS: total is numeric"
+
+          # Errors should be a number
+          if ! echo "$ERRORS" | grep -qE '^-?[0-9]+$'; then
+            echo "FAIL: errors '$ERRORS' is not numeric"
+            exit 1
+          fi
+          echo "PASS: errors is numeric"
+
+          # Warnings should be a number
+          if ! echo "$WARNINGS" | grep -qE '^-?[0-9]+$'; then
+            echo "FAIL: warnings '$WARNINGS' is not numeric"
+            exit 1
+          fi
+          echo "PASS: warnings is numeric"

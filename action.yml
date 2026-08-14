@@ -57,17 +57,17 @@ runs:
     - name: Install pulser-cli
       shell: bash
       env:
-        INPUT_VERSION: ${{ inputs.version }}
-      run: npm install -g "pulser-cli@$INPUT_VERSION"
+        PULSER_VERSION: ${{ inputs.version }}
+      run: npm install -g "pulser-cli@$PULSER_VERSION"
     - name: Run pulser
       id: pulser
       shell: bash
       env:
-        INPUT_PATH: ${{ inputs.path }}
-        INPUT_STRICT: ${{ inputs.strict }}
+        PULSER_PATH: ${{ inputs.path }}
+        PULSER_STRICT: ${{ inputs.strict }}
       run: |
         set +e
-        REPORT=$(pulser "$INPUT_PATH" --format json --no-anim 2>&1)
+        REPORT=$(pulser "$PULSER_PATH" --format json --no-anim 2>&1)
         EXIT_CODE=$?
         set -e
 
@@ -89,10 +89,10 @@ runs:
         echo "total=$TOTAL" >> "$GITHUB_OUTPUT"
 
         echo "::group::Pulser Diagnostic Report"
-        pulser "$INPUT_PATH" --format text --no-anim 2>&1 || true
+        pulser "$PULSER_PATH" --format text --no-anim 2>&1 || true
         echo "::endgroup::"
 
-        if [ "$INPUT_STRICT" = "true" ]; then
+        if [ "$PULSER_STRICT" = "true" ]; then
           if [ "$ERRORS" -gt 0 ] || [ "$WARNINGS" -gt 0 ]; then
             echo "::error::Pulser found $ERRORS error(s) and $WARNINGS warning(s). Score: $SCORE/100"
             exit 1
